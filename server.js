@@ -33,9 +33,23 @@ wss.on('connection', (client, req) => {
   }
 
   client.on('message', (msg) => {
-    msgID = JSON.parse(msg)
-    msgID['key'] = uuidV1();
-    broadcast(msgID)
+    msgData = JSON.parse(msg)
+    switch(msgData.type){
+      case "postMessage":
+        //handles message
+        msgData['key'] = uuidV1();
+        msgData['type'] = "incomingMessage" //change type for broadcast
+        broadcast(msgData)
+        break;
+      case "postNotification":
+        //handles notification
+        msgData['type'] = 'incomingNotification'
+        broadcast(msgData);
+      break;
+      default:
+      //if unknown type
+      throw new Error("Unknown event type" + data.type)
+  }
   })
 
   // Set up a callback for when a client closes the socket. This usually means they closed their browser.
