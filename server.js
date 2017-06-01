@@ -25,11 +25,39 @@ const updateCount = (count) => {
   })
 }
 
-const getRandomInt = (min, max) => {
+const getRandomInt = (min, max) => { //used to randomly pick a color
   return Math.floor(Math.random() * (max - min + 1)) + min;
 }
 
 const color = ["blue", "red", "green", "yellow"];
+
+const handleMessage = (msgData) => {
+  switch(msgData.type){
+    case "postMessage":
+      //handles message
+      msgData['key'] = uuidV1();
+      msgData['type'] = "incomingMessage" //change type for broadcast
+      broadcast(msgData)
+      break;
+    case "postNotification":
+      //handles notification
+      msgData['type'] = 'incomingNotification'
+      broadcast(msgData);
+      break;
+    default:
+    //if unknown type
+    throw new Error("Unknown event type" + data.type)
+  }
+}
+
+const broadcast = (msg) => {
+  console.log(msg)
+  wss.clients.forEach((c) => {
+    // if(c != client) {
+      c.send(JSON.stringify(msg));
+    // }
+  })
+}
 
 
 wss.on('connection', (client, req) => {
@@ -37,41 +65,23 @@ wss.on('connection', (client, req) => {
   counter += 1;
   updateCount(counter);
   client['color'] = (color[getRandomInt(0,3)]) //set random color for client
-  console.log(client.color)
   client.send(JSON.stringify({type: "color", color: client.color}))
   // At this point in time wss.clients is an array that includes
   // the ws objects of all clients, including the one who just connected
   //helper function to broadcast messages
 
-  const broadcast = (msg) => {
-    console.log(msg)
-    wss.clients.forEach((c) => {
-      if(c != client) {
-        c.send(JSON.stringify(msg));
-      }
-    })
-  }
+
 
 
   //when messaqge sent from client
   client.on('message', (msg) => {
     msgData = JSON.parse(msg)
-    switch(msgData.type){
-      case "postMessage":
-        //handles message
-        msgData['key'] = uuidV1();
-        msgData['type'] = "incomingMessage" //change type for broadcast
-        broadcast(msgData)
-        break;
-      case "postNotification":
-        //handles notification
-        msgData['type'] = 'incomingNotification'
-        broadcast(msgData);
-      break;
-      default:
-      //if unknown type
-      throw new Error("Unknown event type" + data.type)
-  }
+    if (matches = msgData.contents.match(/(\S+).(jpg|png|gif)/i)) {
+      msgData.contents = msgData.contents.replace(matches[0], `<img src="${matches[0]}" referrer="Arjun.com" width="40%"/>`)
+    }
+      handleMessage(msgData);
+
+
   })
 
   // Set up a callback for when a client closes the socket. This usually means they closed their browser.
