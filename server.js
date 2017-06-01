@@ -25,22 +25,32 @@ const updateCount = (count) => {
   })
 }
 
-const broadcast = (msg) => {
-  wss.clients.forEach((c) => {
-    if(c != client) {
-      c.send(JSON.stringify(msg));
-    }
-  })
+const getRandomInt = (min, max) => {
+  return Math.floor(Math.random() * (max - min + 1)) + min;
 }
+
+const color = ["blue", "red", "green", "yellow"];
+
 
 wss.on('connection', (client, req) => {
   console.log('Client connected');
   counter += 1;
   updateCount(counter);
+  client['color'] = (color[getRandomInt(0,3)]) //set random color for client
+  console.log(client.color)
+  client.send(JSON.stringify({type: "color", color: client.color}))
   // At this point in time wss.clients is an array that includes
   // the ws objects of all clients, including the one who just connected
   //helper function to broadcast messages
 
+  const broadcast = (msg) => {
+    console.log(msg)
+    wss.clients.forEach((c) => {
+      if(c != client) {
+        c.send(JSON.stringify(msg));
+      }
+    })
+  }
 
 
   //when messaqge sent from client
